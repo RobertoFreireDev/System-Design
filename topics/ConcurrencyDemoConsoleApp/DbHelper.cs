@@ -27,7 +27,7 @@ public class DbHelper
         throw new Exception("Item not found");
     }
 
-    public void UpdateItem(int id, int value, int version)
+    public int UpdateItem(int id, int value, int version)
     {
         using var conn = new NpgsqlConnection(_connectionString);
         conn.Open();
@@ -39,15 +39,7 @@ public class DbHelper
         cmd.Parameters.AddWithValue("value", value);
         cmd.Parameters.AddWithValue("version", version);
 
-        int rows = cmd.ExecuteNonQuery();
-        if (rows == 0)
-        {
-            Console.WriteLine($"Concurrency conflict detected for item {id}");
-        }
-        else
-        {
-            Console.WriteLine($"Item {id} updated successfully");
-        }
+        return cmd.ExecuteNonQuery();
     }
 
     public void AddItem(int id, int initialValue = 0)

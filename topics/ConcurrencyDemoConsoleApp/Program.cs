@@ -30,8 +30,16 @@
 
         try
         {
-            db.UpdateItem(itemId, rand.Next(1, 10), version + 1);
-            Console.WriteLine($"{taskName} successfully updated item. Original value/version: {value}/{version}");
+            var rows = db.UpdateItem(itemId, rand.Next(1, 10), version + 1);
+
+            if (rows > 0)
+            {
+                Console.WriteLine($"Item {itemId} updated successfully. Original value/version: {value}/{version}");
+            }
+            else
+            {
+                Console.WriteLine($"Item {itemId} Not updated successfully. Original value/version: {value}/{version}");
+            }
         }
         catch (Exception ex)
         {
