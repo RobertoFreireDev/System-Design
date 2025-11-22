@@ -1,49 +1,76 @@
-﻿class Program
+﻿using System.Diagnostics;
+
+class Program
 {
+    public static int ConcurrencyType = 0;
+    // 0 -> No Concurrency Control
+    // 1 -> Optimistic Concurrency Control
+    // 2 -> Pessimistic Concurrency Control
+
     static async Task Main()
     {
+        Console.WriteLine("Select concurrency type:");
+        Console.WriteLine("0 -> No Concurrency Control");
+        Console.WriteLine("1 -> Optimistic Concurrency Control");
+        Console.WriteLine("2 -> Pessimistic Concurrency Control");
+        Console.Write("Enter choice (0/1/2): ");
+
+        string? input = Console.ReadLine();
+
+        if (!int.TryParse(input, out ConcurrencyType) || ConcurrencyType < 0 || ConcurrencyType > 2)
+        {
+            Console.WriteLine("Invalid choice. Defaulting to 0 (No Concurrency Control).");
+            ConcurrencyType = 0;
+        }
+        else
+        {
+            Console.WriteLine($"Selected concurrency type: {ConcurrencyType}");
+        }
+
         var connectionString = "Host=localhost;Port=8081;Username=simha;Password=Postgres2019!;Database=weather";
         var db = new DbHelper(connectionString);
 
+        db.CleanUp();
         int itemId = 1;
         db.AddItem(itemId, 0);
 
         Console.WriteLine("Starting concurrent update attempts...");
 
-        Task t1 = UpdateItemSimAsync(db, itemId, "T1");
-        Task t2 = UpdateItemSimAsync(db, itemId, "T2");
-        Task t3 = UpdateItemSimAsync(db, itemId, "T3");
-        Task t4 = UpdateItemSimAsync(db, itemId, "T4");
+        int taskCount = 100;
+        var sw = Stopwatch.StartNew();
 
-        await Task.WhenAll(t1, t2, t3, t4);
+        var tasks = new List<Task>();
 
-        Console.WriteLine("Done.");
+        var (value, version) = db.GetItem(itemId);
+
+        for (int i = 1; i <= taskCount; i++)
+        {
+            string taskName = $"T{i}";
+            tasks.Add(UpdateItemSimAsync(db, itemId, value, version, taskName));
+        }
+
+        await Task.WhenAll(tasks);
+
+        sw.Stop();
+        Console.WriteLine($"All {taskCount} tasks completed in {sw.ElapsedMilliseconds} ms");
     }
 
-    static async Task UpdateItemSimAsync(DbHelper db, int itemId, string taskName)
+    static async Task UpdateItemSimAsync(DbHelper db, int itemId, int value, int version, string taskName)
     {
-        var (value, version) = db.GetItem(itemId);
-        Console.WriteLine($"{taskName} read value={value}, version={version}");
-
         var rand = new Random();
         await Task.Delay(rand.Next(100, 500));
-
-        try
+        var rows = 0;
+        switch (ConcurrencyType)
         {
-            var rows = db.UpdateItem(itemId, rand.Next(1, 10), version + 1);
-
-            if (rows > 0)
-            {
-                Console.WriteLine($"Item {itemId} updated successfully. Original value/version: {value}/{version}");
-            }
-            else
-            {
-                Console.WriteLine($"Item {itemId} Not updated successfully. Original value/version: {value}/{version}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"{taskName} failed to update item: {ex.Message}");
+            case 0:
+                rows = db.UpdateItem(itemId, value, 1, version);
+                break;
+            case 1:
+                rows = db.OptimisticConcurrencyUpdateItem(itemId, value, 1, version);
+                break;
+            case 2:
+                rows = db.PessimisticConcurrencyUpdateItem(itemId, 1);
+                break;
         }
     }
 }

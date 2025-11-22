@@ -1,5 +1,4 @@
 ﻿using Npgsql;
-using System.Collections.Generic;
 
 public class DbHelper
 {
@@ -27,22 +26,84 @@ public class DbHelper
         throw new Exception("Item not found");
     }
 
-    public int UpdateItem(int id, int value, int version)
+    public void CleanUp()
+    {
+        using var conn = new NpgsqlConnection(_connectionString);
+        conn.Open();
+
+        using var cmd = new NpgsqlCommand(@"
+            DELETE FROM item_updates_log;
+            DELETE FROM items;", conn);
+
+        int affectedRows = cmd.ExecuteNonQuery();
+    }
+
+    public int OptimisticConcurrencyUpdateItem(int id, int value, int addValue, int version)
     {
         using var conn = new NpgsqlConnection(_connectionString);
         conn.Open();
 
         using var cmd = new NpgsqlCommand(
-            "UPDATE items SET value = @value, version = @version WHERE id = @id", conn);
+            "UPDATE items SET value = @value, version = @version + 1 WHERE id = @id AND version = @version", conn);
 
         cmd.Parameters.AddWithValue("id", id);
-        cmd.Parameters.AddWithValue("value", value);
+        cmd.Parameters.AddWithValue("value", value + addValue);
         cmd.Parameters.AddWithValue("version", version);
 
         return cmd.ExecuteNonQuery();
     }
 
-    public void AddItem(int id, int initialValue = 0)
+    public int PessimisticConcurrencyUpdateItem(int id, int addValue)
+    {
+        using var conn = new NpgsqlConnection(_connectionString);
+        conn.Open();
+
+        // Start a transaction to hold the lock
+        using var transaction = conn.BeginTransaction();
+
+        // Step 1: Lock the row
+        using var selectCmd = new NpgsqlCommand(
+            "SELECT value, version FROM items WHERE id = @id FOR UPDATE", conn, transaction);
+        selectCmd.Parameters.AddWithValue("id", id);
+
+        using var reader = selectCmd.ExecuteReader();
+        if (!reader.Read())
+            return -1;
+
+        int currentValue = reader.GetInt32(0);
+        int currentVersion = reader.GetInt32(1);
+        reader.Close(); // Important: close reader before executing another command
+
+        // Step 2: Update the row safely
+        using var updateCmd = new NpgsqlCommand(
+            "UPDATE items SET value = @value, version = version + 1 WHERE id = @id", conn, transaction);
+        updateCmd.Parameters.AddWithValue("id", id);
+        updateCmd.Parameters.AddWithValue("value", currentValue + addValue);
+
+        int rowsAffected = updateCmd.ExecuteNonQuery();
+
+        // Step 3: Commit the transaction (releases the lock)
+        transaction.Commit();
+
+        return rowsAffected;
+    }
+
+    public int UpdateItem(int id, int value, int addValue, int version)
+    {
+        using var conn = new NpgsqlConnection(_connectionString);
+        conn.Open();
+
+        using var cmd = new NpgsqlCommand(
+            "UPDATE items SET value = @value, version = @version + 1 WHERE id = @id", conn);
+
+        cmd.Parameters.AddWithValue("id", id);
+        cmd.Parameters.AddWithValue("value", value + addValue);
+        cmd.Parameters.AddWithValue("version", version);
+
+        return cmd.ExecuteNonQuery();
+    }
+
+    public int AddItem(int id, int initialValue = 0)
     {
         using var conn = new NpgsqlConnection(_connectionString);
         conn.Open();
@@ -54,14 +115,6 @@ public class DbHelper
         cmd.Parameters.AddWithValue("id", id);
         cmd.Parameters.AddWithValue("value", initialValue);
 
-        int rows = cmd.ExecuteNonQuery();
-        if (rows > 0)
-        {
-            Console.WriteLine($"Item {id} added successfully.");
-        }
-        else
-        {
-            Console.WriteLine($"Item {id} already exists.");
-        }
+        return cmd.ExecuteNonQuery();
     }
 }

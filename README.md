@@ -17,13 +17,27 @@ Username: simha
 Password: Postgres2019!
 ```
 
-Concurrency issue:
+## Testing Concurrency Issue
 
-| log_id | item_id | old_value | new_value | old_version | new_version | updated_at               |
-|--------|---------|-----------|-----------|-------------|-------------|-------------------------|
-| 5      | 1       | 0         | 6         | 0           | 1           | 2025-11-22 14:17:51.798969 |
-| 6      | 1       | 6         | 2         | 1           | 1           | 2025-11-22 14:17:51.902468 |
-| 7      | 1       | 2         | 1         | 1           | 1           | 2025-11-22 14:17:52.055698 |
-| 8      | 1       | 1         | 3         | 1           | 1           | 2025-11-22 14:17:52.101554 |
+Run scripts from topics\Script.sql
 
+Run ConcurrencyDemoConsoleApp
+
+SELECT * FROM items;
+
+SELECT * FROM item_updates_log;
+
+### General concurrency issue
+
+All concurrent requests are completed but using the initial value, leading to wrong calculation if the update depends on previous value
+
+Example: Two requests read value=10 at the same time, both add 1, and write back 11. The correct final value should be 12 instead of 11.
+
+### Optimistic concurrency control
+
+Only the first concurrent request is completed. All the other requests fail (or retry, depending on your logic) if the version has changed.
+
+### Pessimistic concurrency control (PCC)
+
+All concurrent requests are completed because the database locks each request. No lost updates, but requests may be delayed due to waiting for the lock.
 
