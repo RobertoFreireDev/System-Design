@@ -58,5 +58,6 @@ INSERT INTO items (value) VALUES (10);
 UPDATE items SET value = value + 1, version = version + 1 WHERE id = 2;
 
 Delete from items;
+Delete from item_updates_log;
 SELECT * FROM items;
 SELECT * FROM item_updates_log;
