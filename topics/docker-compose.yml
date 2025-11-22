@@ -1,0 +1,30 @@
+services:
+  redisdb:
+    image: redis
+    container_name: redisdb
+    ports:
+      - "6379:6379"
+
+  postgres-db:
+    container_name: postgres-db
+    image: postgres
+    ports:
+      - "8081:5432"
+    environment:
+      POSTGRES_PASSWORD: "Postgres2019!"
+      POSTGRES_USER: "simha" 
+      POSTGRES_DB : "weather"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "simha@yahoo.com.br"
+      PGADMIN_DEFAULT_PASSWORD: "PgAdmin2019!"
+    ports:
+      - "16543:80"
+    depends_on:
+      - postgres-db
