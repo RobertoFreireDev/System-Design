@@ -61,3 +61,20 @@ Delete from items;
 Delete from item_updates_log;
 SELECT * FROM items;
 SELECT * FROM item_updates_log;
+
+
+-- OptimisticConcurrencyUpdateItem
+CREATE OR REPLACE FUNCTION check_version()
+RETURNS trigger AS $$
+BEGIN
+    IF OLD.version <> NEW.version THEN
+        RAISE EXCEPTION 'Version mismatch for id %', OLD.id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_version
+BEFORE UPDATE ON items
+FOR EACH ROW
+EXECUTE FUNCTION check_version();
