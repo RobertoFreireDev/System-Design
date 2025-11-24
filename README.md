@@ -37,7 +37,14 @@ Example: Two requests read value=10 at the same time, both add 1, and write back
 
 Only the first concurrent request is completed. All the other requests fail (or retry, depending on your logic) if the version has changed.
 
-### Pessimistic concurrency control (PCC)
+### Pessimistic concurrency control
 
 All concurrent requests are completed because the database locks each request. No lost updates, but requests may be delayed due to waiting for the lock.
 
+## Dotnet vs Go APis
+
+docker compose up -d
+
+docker stats
+
+Run scripts from govsdotnet\Script.sql

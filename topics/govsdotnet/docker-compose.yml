@@ -1,0 +1,54 @@
+services:
+  postgres-db:
+    container_name: postgres-db
+    image: postgres
+    ports:
+      - "8081:5432"
+    environment:
+      POSTGRES_PASSWORD: "Postgres2019!"
+      POSTGRES_USER: "simha" 
+      POSTGRES_DB : "weather"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+        PGADMIN_DEFAULT_EMAIL: "simha@yahoo.com.br"
+        PGADMIN_DEFAULT_PASSWORD: "PgAdmin2019!"
+    ports:
+        - "16543:80"
+    depends_on:
+        - postgres-db
+
+  product-api:
+    container_name: product-api
+    build: ./ProductAPI
+    ports:
+        - "3000:3000"
+    environment:
+        ASPNETCORE_URLS: "http://+:3000"
+    depends_on:
+        - postgres-db
+
+  dotnet-api:
+    container_name: dotnet-api
+    build: ./DotNetAPI
+    ports:
+        - "3001:3001"
+    environment:
+        ASPNETCORE_URLS: "http://+:3001"
+    depends_on:
+        - postgres-db
+        
+  goapi:
+    container_name: goapi
+    build:
+      context: ./
+      dockerfile: ./GoAPI/Dockerfile
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres-db
