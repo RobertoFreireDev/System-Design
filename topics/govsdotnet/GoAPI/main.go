@@ -98,14 +98,7 @@ func main() {
 			remoteProduct.Number++
 		}
 
-		// 4 - Save updated number to local DB
-		rowsAffected, err := repo.UpdateProductNumber(id, remoteProduct.Number)
-		if err != nil || rowsAffected == 0 {
-			c.JSON(http.StatusConflict, gin.H{"error": "Failed to update local product (possible concurrency issue)"})
-			return
-		}
-
-		// 5 - Return combined result
+		// 4 - Return combined result
 		c.JSON(http.StatusOK, gin.H{
 			"LocalProduct": localProduct,
 			"RemoteProduct": remoteProduct,

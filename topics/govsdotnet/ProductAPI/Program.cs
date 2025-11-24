@@ -6,7 +6,7 @@ var app = builder.Build();
 
 app.MapGet("/product/{id}", async (int id) =>
 {
-    await Task.Delay(500);
+    await Task.Delay(100);
 
     var product = new ProductDto
     {

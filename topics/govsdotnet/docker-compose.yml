@@ -1,4 +1,5 @@
 services:
+
   postgres-db:
     container_name: postgres-db
     image: postgres
@@ -7,10 +8,14 @@ services:
     environment:
       POSTGRES_PASSWORD: "Postgres2019!"
       POSTGRES_USER: "simha" 
-      POSTGRES_DB : "weather"
+      POSTGRES_DB: "weather"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./pgdata:/var/lib/postgresql/data/pgdata
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U simha -d weather"]
+        interval: 5s
+        retries: 5
 
   pgadmin:
     container_name: pgadmin
@@ -21,7 +26,8 @@ services:
     ports:
         - "16543:80"
     depends_on:
-        - postgres-db
+        postgres-db:
+         condition: service_healthy
 
   product-api:
     container_name: product-api
@@ -31,7 +37,8 @@ services:
     environment:
         ASPNETCORE_URLS: "http://+:3000"
     depends_on:
-        - postgres-db
+        postgres-db:
+         condition: service_healthy
 
   dotnet-api:
     container_name: dotnet-api
@@ -41,7 +48,8 @@ services:
     environment:
         ASPNETCORE_URLS: "http://+:3001"
     depends_on:
-        - postgres-db
+        postgres-db:
+         condition: service_healthy
         
   goapi:
     container_name: goapi
@@ -51,4 +59,5 @@ services:
     ports:
       - "3002:3002"
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
