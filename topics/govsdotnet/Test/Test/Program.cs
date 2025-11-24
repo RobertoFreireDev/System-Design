@@ -30,20 +30,20 @@ class Program
         HttpClient client = new HttpClient();
 
         // First batch
-        Console.WriteLine("\n=== Running first 100 requests ===");
-        await RunBatch(client, baseUrl, 1000);
+        Console.WriteLine("\n=== Running first 10 requests ===");
+        await RunBatch(client, baseUrl, 10);
 
         // Second batch
-        Console.WriteLine("\n=== Running second 100 requests ===");
-        await RunBatch(client, baseUrl, 1000);
+        Console.WriteLine("\n=== Running second 10 requests ===");
+        await RunBatch(client, baseUrl, 10);
 
         // Thrid batch
-        Console.WriteLine("\n=== Running first 100 requests ===");
-        await RunBatch(client, baseUrl, 1000);
+        Console.WriteLine("\n=== Running thrid 10 requests ===");
+        await RunBatch(client, baseUrl, 10);
 
         // Forth batch
-        Console.WriteLine("\n=== Running second 100 requests ===");
-        await RunBatch(client, baseUrl, 1000);
+        Console.WriteLine("\n=== Running forth 10 requests ===");
+        await RunBatch(client, baseUrl, 10);
     }
 
     static async Task RunBatch(HttpClient client, string baseUrl, int numberOfRequests)

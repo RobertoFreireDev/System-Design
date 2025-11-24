@@ -14,6 +14,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "govsdotnetcsharp", "govsdotnetcsharp", "{36641FB3-80DC-4CA8-B79E-1CA5CD9DDE34}"
 	ProjectSection(SolutionItems) = preProject
 		govsdotnet\docker-compose.yml = govsdotnet\docker-compose.yml
+		govsdotnet\ProductScript.sql = govsdotnet\ProductScript.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAPI", "govsdotnet\ProductAPI\ProductAPI.csproj", "{C074A458-431D-4BDD-8A8A-E10620AE6FD8}"

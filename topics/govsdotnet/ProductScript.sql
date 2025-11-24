@@ -4,9 +4,6 @@ CREATE TABLE products (
     number INT NOT NULL           -- Some numeric value
 );
 
-ALTER TABLE products
-ADD CONSTRAINT unique_name UNIQUE (name);
-
 INSERT INTO products (name, number)
 VALUES 
     ('Laptop', 1);
@@ -14,3 +11,5 @@ VALUES
 SELECT * FROM products;
 
 DELETE FROM products
+
+drop table products
